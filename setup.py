@@ -3,8 +3,8 @@ import setuptools
 with open('README.md', 'r') as fh:
     long_description = fh.read()
 
-with open('requirements.txt', 'r') as fh:
-    requirements = fh.read().strip().split('\n')
+# with open('requirements.txt', 'r') as fh:
+#     requirements = fh.read().strip().split('\n')
 
 setuptools.setup(
     name='tranquil',
@@ -15,7 +15,7 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     url='https://github.com/ysenarath/tranquil',
     packages=setuptools.find_packages(),
-    install_requires=requirements,
+    install_requires=[],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
