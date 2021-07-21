@@ -1,0 +1,51 @@
+{% set title = config['title'] %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+</head>
+<body>
+<div id="app">
+    {% for c in children %}
+        {{ c.render() | safe }}
+    {% endfor %}
+</div>
+{% if config['DEBUG'] %}
+    <script>console.warn('Your application is running on debug mode.')</script>
+{% endif %}
+<script src="{{ url_for('static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='axios/axios.min.js') }}"></script>
+{% if config['DEBUG'] %}
+    <script src="{{ url_for('static', filename='vuejs/vue.global.js') }}"></script>
+    <script src="{{ url_for('static', filename='plotly/plotly-2.2.0.js') }}"></script>
+{% else %}
+    <script src="{{ url_for('static', filename='vuejs/vue.global.prod.js') }}"></script>
+    <script src="{{ url_for('static', filename='plotly/plotly-2.2.0.min.js') }}"></script>
+{% endif %}
+<script src="{{ url_for('static', filename='vuex/es6-promise.auto.js') }}"></script>
+<script src="{{ url_for('static', filename='vuex/vuex.global.js') }}"></script>
+<script>
+    const store = {
+        state: Vue.reactive({{ state.to_dict() | tojson }}),
+        __update__(url, data, then_fn = null) {
+            axios.post(url, data)
+                .then(response => {
+                    let data = {
+                        ...this.state,
+                        ...response.data,
+                    };
+                    for (const property in data) {
+                        this.state[property] = data[property];
+                    }
+                    if (then_fn !== null) then_fn();
+                });
+        },
+    };
+    {% include 'app.js.html' %}
+</script>
+</body>
+</html>

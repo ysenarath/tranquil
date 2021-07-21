@@ -10,7 +10,7 @@ setuptools.setup(
     name='tranquil',
     version='0.0.1',
     author='Yasas Senarath',
-    description='Twitter Academic API Client.',
+    description='',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/ysenarath/tranquil',

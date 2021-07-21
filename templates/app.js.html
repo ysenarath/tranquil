@@ -1,0 +1,24 @@
+const app = Vue.createApp({
+{# DATA #}
+data() {
+return store.state;
+},
+{# METHODS #}
+methods: {
+{% for method in methods %}
+    {{ method | safe }},
+{% endfor %}
+},
+{# MOUNTED #}
+mounted() {
+{{ mounted | safe }}
+},
+{# COMPUTED #}
+computed: {console: () => console,},
+});
+{# COMPONENTS #}
+{% for id, elem in components.items() %}
+    app.component('{{ elem.name }}', {{ elem.to_json() | safe }});
+{% endfor %}
+{# REGISTER #}
+app.mount('#app');
