@@ -7,6 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ title }}</title>
     <link href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/bootstrap-nightshade.min.css') }}" rel="stylesheet">
+    <style v-if="inDarkMode">
+        svg.main-svg {
+            background-color: transparent !important;
+        }
+
+        svg text {
+            fill: white !important;
+        }
+    </style>
 </head>
 <body>
 <div id="app">
@@ -18,6 +28,7 @@
     <script>console.warn('Your application is running on debug mode.')</script>
 {% endif %}
 <script src="{{ url_for('static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='bootstrap/darkmode.min.js') }}"></script>
 <script src="{{ url_for('static', filename='axios/axios.min.js') }}"></script>
 {% if config['DEBUG'] %}
     <script src="{{ url_for('static', filename='vuejs/vue.global.js') }}"></script>

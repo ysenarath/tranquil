@@ -1,4 +1,4 @@
-from tranquil.core import Component
+from tranquil.core import Component, Var
 from tranquil.html import html
 
 
@@ -34,14 +34,27 @@ def Navbar(brand='Navbar', items=None, id='bootstrap-navbar'):
                 html.CLASS('collapse navbar-collapse'),
                 id='navbarContent',
             ),
+            html.FORM(
+                html.DIV(
+                    html.INPUT(html.V_MODEL('state.inDarkMode'),
+                               type='checkbox', _class='form-check-input', id='css-toggle-btn'),
+                    html.LABEL(_class='form-check-label', **{'for': 'css-toggle-btn'}),
+                    _class='custom-control custom-switch',
+                    **{'data-toggle': 'tooltip', 'data-placement': 'left'}
+                ),
+                _class='form-check form-switch'
+            ),
             html.CLASS('container-fluid'),
         ),
-        html.CLASS('navbar navbar-expand-lg navbar-light bg-light'),
+        html.CLASS('navbar navbar-expand-lg bg-dark navbar-light navbar-dark'),
         html.V_BIND('id', 'id'),
     )
     return Component('bootstrap-navbar', dict(
+        data={
+            'state': Var('store.state'),
+        },
         props={
             'id': {'default': 'bootstrapNavbar'},
         },
-        template=template
+        template=template,
     ))(id=id)

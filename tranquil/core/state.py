@@ -1,11 +1,14 @@
+from json import JSONEncoder
+
 __all__ = [
-    'Variable',
+    'State',
+    'Var',
 ]
 
 
-class Variable(object):
+class State:
     def __init__(self, parent=None, name=None, value=None):
-        super(Variable, self).__init__()
+        super(State, self).__init__()
         self._name = name
         self._parent = parent
         self._value = value
@@ -14,9 +17,9 @@ class Variable(object):
         if item.startswith('_'):
             raise AttributeError('Attribute names can\'t start with underscore (_) sign.')
         if self._value is None:
-            self._value = {item: Variable(self, item)}
+            self._value = {item: State(self, item)}
         elif item not in self._value:
-            self._value[item] = Variable(self, item)
+            self._value[item] = State(self, item)
         elif item in self._value:
             pass
         else:
@@ -28,9 +31,9 @@ class Variable(object):
             super().__setattr__(key, value)
         else:
             if self._value is None:
-                self._value = {key: Variable(self, key, value)}
+                self._value = {key: State(self, key, value)}
             elif key not in self._value:
-                self._value[key] = Variable(self, key, value)
+                self._value[key] = State(self, key, value)
             elif key in self._value:
                 pass
             else:
@@ -47,11 +50,23 @@ class Variable(object):
 
     @staticmethod
     def _to_dict(data=None):
-        if isinstance(data, Variable):
+        if isinstance(data, State):
             if data._name is None:
-                return Variable._to_dict(data._value)
+                return State._to_dict(data._value)
             else:
-                return {data._name: Variable._to_dict(data._value)}
+                return {data._name: State._to_dict(data._value)}
         elif isinstance(data, dict):
-            return {d._name: Variable._to_dict(d._value) for d in data.values()}
+            return {d._name: State._to_dict(d._value) for d in data.values()}
         return data
+
+
+class Var(JSONEncoder):
+    def __init__(self, name):
+        super(Var, self).__init__()
+        self._name = name
+
+    def __repr__(self):
+        return self._name
+
+    def default(self, o):
+        return str(self)

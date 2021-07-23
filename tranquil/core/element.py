@@ -4,7 +4,7 @@ from lxml import etree
 from lxml.html.builder import E
 from six import string_types
 
-from tranquil.core.state import Variable
+from tranquil.core.state import State
 from tranquil.core.template import Template
 
 __all__ = [

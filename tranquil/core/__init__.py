@@ -4,7 +4,8 @@ from tranquil.core.template import *
 from tranquil.core.state import *
 
 __all__ = [
-    'Variable',
+    'Var',
+    'State',
     'Element',
     'Template',
     'Component',

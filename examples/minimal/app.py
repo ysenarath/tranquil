@@ -28,6 +28,17 @@ def scatter_data():
     }
 
 
+@app.api.route('/treemap_data', methods=['POST'])
+def treemap_data():
+    return {
+        'data': [{
+            'type': "treemap",
+            'labels': ["Eve", "Cain", "Seth", "Enos", "Noam", "Abel", "Awan", "Enoch", "Azura"],
+            'parents': ["", "Eve", "Eve", "Seth", "Seth", "Eve", "Eve", "Awan", "Eve"]
+        }],
+    }
+
+
 def heading():
     return tcb.Navbar('3Minimal', [
         dict(label='Home', url=url_for('home')),
@@ -37,11 +48,17 @@ def heading():
 
 @app.route('/')
 def home():
+    app.state.inDarkMode = True
     app.state.input_1.value = 100
     scatter_plot = tcp.ScatterPlot(
         id='scatter-plot-1',
         data_url=url_for('scatter_data'),
         ref='scatter-plot-1',
+    )
+    treemap = tcp.Treemap(
+        id='treemap-1',
+        data_url=url_for('treemap_data'),
+        ref='treemap-1',
     )
     return dict(
         template=[
@@ -49,14 +66,21 @@ def home():
             html.DIV(
                 html.P('# of Values'),
                 html.INPUT(
-                    html.V_MODEL('input_1.value', modifier='number'),
-                    html.V_ON('keyup.enter', script=f'{scatter_plot}.update(input_1)')
+                    html.V_MODEL(f'input_1.value', modifier='number'),
+                    html.V_ON('keyup.enter', script=f'{scatter_plot}.update(input_1)'),
+                    _class='form-control',
                 ),
                 _class='m-3',
             ),
-            html.DIV(scatter_plot),
+
+            html.DIV(
+                html.DIV(scatter_plot, _class='col'),
+                html.DIV(treemap, _class='col'),
+                _class='row w-100'
+            ),
         ],
-        mounted=f'{scatter_plot}.update(store.state.input_1);',
+        mounted=f'{scatter_plot}.update(store.state.input_1);'
+                f'{treemap}.update();',
     )
 
 

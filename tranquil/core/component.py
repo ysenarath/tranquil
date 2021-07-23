@@ -54,7 +54,9 @@ class Component:
 
 
 class ComponentDefinition:
-    def __init__(self, data=None, props=None, methods=None, mounted='', template=''):
+    def __init__(self, data=None, props=None, methods=None, mounted='', template='', computed=None):
+        if computed is None:
+            computed = []
         if data is None:
             data = {}
         if props is None:
@@ -66,6 +68,7 @@ class ComponentDefinition:
         self.methods = methods
         self.mounted = mounted
         self.template = template
+        self.computed = computed
 
     def to_json(self):
         methods = [
@@ -80,9 +83,11 @@ class ComponentDefinition:
         else:
             template = self.template
         return '{{props: ["{props}"], data(){{return {data}}},methods:{{{methods}}},mounted(){{{mounted}}}' \
+               ',computed(){{{computed}}}' \
                ',template:`{template}`}}' \
             .format(props='","'.join(self.props),
                     data=json.dumps(self.data),
                     template=template,
                     mounted=self.mounted,
+                    computed=','.join(self.computed),
                     methods=','.join(methods))

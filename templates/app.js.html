@@ -3,6 +3,7 @@ const app = Vue.createApp({
 data() {
 return store.state;
 },
+store,
 {# METHODS #}
 methods: {
 {% for method in methods %}
@@ -11,7 +12,8 @@ methods: {
 },
 {# MOUNTED #}
 mounted() {
-{{ mounted | safe }}
+{{ mounted | safe }};
+if (store.state.inDarkMode) {darkmode.inDarkMode = true;} else {darkmode.inDarkMode = false;}
 },
 {# COMPUTED #}
 computed: {console: () => console,},

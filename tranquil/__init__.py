@@ -2,7 +2,6 @@ from types import SimpleNamespace
 
 import flask
 from flask import Flask, render_template, url_for
-from six import string_types
 
 from tranquil import config as g, utils
 from tranquil.core import *
@@ -12,7 +11,6 @@ TEMPLATES_PATH = g.config['DEFAULT']['templates_path']
 
 __all__ = [
     'Tranquil',
-    'JavaScriptFormatter',
 ]
 
 
@@ -30,7 +28,7 @@ class Tranquil:
             app = self._create_app()
         self.server = app
         self.methods = []
-        self.state = Variable()
+        self.state = State()
         self.version = '1'
 
     # noinspection PyMethodMayBeStatic
