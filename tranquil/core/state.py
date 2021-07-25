@@ -1,72 +1,68 @@
-from json import JSONEncoder
-
 __all__ = [
     'State',
-    'Var',
+    'ref',
 ]
 
 
-class State:
-    def __init__(self, parent=None, name=None, value=None):
-        super(State, self).__init__()
-        self._name = name
-        self._parent = parent
-        self._value = value
+class _object(object):
+    def __init__(self, parent, name, data):
+        super(_object, self).__init__()
+        super(_object, self).__setattr__('_parent', parent)
+        super(_object, self).__setattr__('_name', name)
+        super(_object, self).__setattr__('_data', self._to_object(data))
 
     def __getattr__(self, item):
-        if item.startswith('_'):
-            raise AttributeError('Attribute names can\'t start with underscore (_) sign.')
-        if self._value is None:
-            self._value = {item: State(self, item)}
-        elif item not in self._value:
-            self._value[item] = State(self, item)
-        elif item in self._value:
-            pass
+        if item in self._data:
+            return self._data[item]
         else:
-            raise AttributeError('Attribute named \'{}\' not found in \'{}\'.'.format(item, self._name))
-        return self._value[item]
+            raise AttributeError
 
     def __setattr__(self, key, value):
-        if key.startswith('_'):
-            super().__setattr__(key, value)
-        else:
-            if self._value is None:
-                self._value = {key: State(self, key, value)}
-            elif key not in self._value:
-                self._value[key] = State(self, key, value)
-            elif key in self._value:
-                pass
-            else:
-                raise AttributeError('Attribute named \'{}\' not found in \'{}\'.'.format(key, self._name))
+        self._data[key] = _object(self, key, value)
 
-    def __repr__(self):
-        if (self._parent is None) or (self._parent._name is None):
-            return str(self._name)
+    def _to_object(self, data):
+        if isinstance(data, dict):
+            return {k: _object(self, k, v) for k, v in data.items()}
         else:
-            return '{}.{}'.format(str(self._parent), self._name)
+            return data
 
-    def to_dict(self):
-        return self._to_dict(self)
+    @property
+    def _val(self):
+        return _object._get_value(self)
 
     @staticmethod
-    def _to_dict(data=None):
-        if isinstance(data, State):
-            if data._name is None:
-                return State._to_dict(data._value)
+    def _get_value(obj):
+        if isinstance(obj._data, dict):
+            return {k: _object._get_value(v) for k, v in obj._data.items()}
+        return obj._data
+
+    def _set_value(self, value):
+        super(_object, self).__setattr__('_data', self._to_object(value))
+
+    @property
+    def _ref(self):
+        if self._name is not None:
+            if (self._parent is not None) and (self._parent._name is not None):
+                return '{}.{}'.format(self._parent._ref, self._name)
             else:
-                return {data._name: State._to_dict(data._value)}
-        elif isinstance(data, dict):
-            return {d._name: State._to_dict(d._value) for d in data.values()}
-        return data
+                return self._name
+        return ''
 
 
-class Var(JSONEncoder):
-    def __init__(self, name):
-        super(Var, self).__init__()
-        self._name = name
+class State(_object):
+    def __init__(self, data=None):
+        super(State, self).__init__(parent=None, name=None, data=({} if data is None else data))
 
-    def __repr__(self):
-        return self._name
+    def to_dict(self):
+        return super(State, self)._val
 
-    def default(self, o):
-        return str(self)
+    def set_state(self, state):
+        super(State, self)._set_value(state)
+
+
+def ref(o):
+    return '{{' + (o._ref if isinstance(o, _object) else str(o)) + '}}'
+
+
+def is_var(o):
+    return isinstance(o, _object)

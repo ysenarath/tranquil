@@ -1,11 +1,11 @@
 from tranquil.core import *
 
 
-def find_components(elements):
-    components = {}
-    for e in elements:
-        if isinstance(e, ComponentElement):
-            components[e.component.name] = e.component
+def find_components(children):
+    results = []
+    for e in children:
+        if isinstance(e, Component):
+            results.append(e)
         elif isinstance(e, Element):
-            components.update(find_components(e.children))
-    return components
+            results += find_components(e.children)
+    return results

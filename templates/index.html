@@ -37,26 +37,40 @@
     <script src="{{ url_for('static', filename='vuejs/vue.global.prod.js') }}"></script>
     <script src="{{ url_for('static', filename='plotly/plotly-2.2.0.min.js') }}"></script>
 {% endif %}
-<script src="{{ url_for('static', filename='vuex/es6-promise.auto.js') }}"></script>
-<script src="{{ url_for('static', filename='vuex/vuex.global.js') }}"></script>
 <script>
     const store = {
         state: Vue.reactive({{ state.to_dict() | tojson }}),
-        __update__(url, data, then_fn = null) {
-            axios.post(url, data)
-                .then(response => {
-                    let data = {
-                        ...this.state,
-                        ...response.data,
-                    };
-                    for (const property in data) {
-                        this.state[property] = data[property];
-                    }
-                    if (then_fn !== null) then_fn();
-                });
-        },
     };
-    {% include 'app.js.html' %}
+    {% for c in callbacks %}
+        Vue.watch(
+            () =>
+                {% if c.input is iterable and (c.input is not string and c.input is not mapping) %}
+                    [{% for i in c.input %}store.state.{{ i._ref }}, {% endfor %}]
+                {% else %}
+                    store.state.{{ c.input._ref }}
+                {% endif %}
+            , (state, prevState) => {
+                axios.post("{{ url_for(c.fn) }}", {data: state})
+                    .then(response => {
+                        let payload = response.data;
+                        console.log(payload);
+                        {% set var = c.output %}
+                        {% if var is iterable and (var is not string and var is not mapping) %}
+                            {% for o in var %}
+                                store.state.{{ o._ref }} = payload[{{ loop.index0 }}];
+                            {% endfor %}
+                        {% else %}
+                            store.state.{{ var._ref }} = payload;
+                        {% endif %}
+                    });
+            },
+            {deep: true}
+        )
+    {% endfor %}
+    {% for c in components %}
+        Vue.watch(() => store.state.{{ c.state._ref }}, (state, prevState) => { {{ c.refresh | safe }} })
+    {% endfor %}
 </script>
+{% include 'app.js.html' %}
 </body>
 </html>

@@ -1,26 +1,18 @@
-const app = Vue.createApp({
-{# DATA #}
-data() {
-return store.state;
-},
-store,
-{# METHODS #}
-methods: {
-{% for method in methods %}
-    {{ method | safe }},
-{% endfor %}
-},
-{# MOUNTED #}
-mounted() {
-{{ mounted | safe }};
-if (store.state.inDarkMode) {darkmode.inDarkMode = true;} else {darkmode.inDarkMode = false;}
-},
-{# COMPUTED #}
-computed: {console: () => console,},
-});
-{# COMPONENTS #}
-{% for id, elem in components.items() %}
-    app.component('{{ elem.name }}', {{ elem.to_json() | safe }});
-{% endfor %}
-{# REGISTER #}
-app.mount('#app');
+<script>
+    const app = Vue.createApp({
+        data() {
+            return store.state;
+        },
+        store,
+        methods: {},
+        mounted() {
+            darkmode.inDarkMode = !!store.state.inDarkMode;
+            {% for c in components %}
+                ((state) => { {{ c.refresh | safe }}
+                })(store.state.{{ c.state._ref }});
+            {% endfor %}
+        },
+        computed: {console: () => console,},
+    });
+    app.mount('#app');
+</script>

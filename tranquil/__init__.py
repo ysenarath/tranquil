@@ -1,34 +1,62 @@
 from types import SimpleNamespace
 
 import flask
-from flask import Flask, render_template, url_for
+from flask import Flask, render_template, g
+from werkzeug.local import LocalProxy
 
-from tranquil import config as g, utils
+from tranquil import config as gc
 from tranquil.core import *
+from tranquil.utils import find_components
 
-STATIC_PATH = g.config['DEFAULT']['static_path']
-TEMPLATES_PATH = g.config['DEFAULT']['templates_path']
+STATIC_PATH = gc.config['DEFAULT']['static_path']
+TEMPLATES_PATH = gc.config['DEFAULT']['templates_path']
+TITLE = gc.config['DEFAULT'].get('title', 'Tranquil')
 
 __all__ = [
     'Tranquil',
+    'Component',
+    'callback',
+    'state',
+    'ref',
 ]
 
 
+def _get_state():
+    if 'state' not in g:
+        g.state = State()
+    return g.state
+
+
+state = LocalProxy(_get_state)
+
+
+def _get_callbacks():
+    if 'callbacks' not in g:
+        g.callbacks = []
+    return g.callbacks
+
+
+callbacks = LocalProxy(_get_callbacks)
+
+
+# noinspection PyShadowingBuiltins
+def callback(fn, input, output):
+    c = dict(fn=fn.__name__, input=input, output=output)
+    callbacks.append(c)
+    return c
+
+
 class Tranquil:
-    def __init__(self, app=None, config=None):
+    def __init__(self, config=None):
         """Initialize Application
 
-        :param app: flask app to register components and routes.
         :param config: other custom config.
         """
         if config is None:
             config = {}
         self.config = config
-        if app is None:
-            app = self._create_app()
-        self.server = app
-        self.methods = []
-        self.state = State()
+        self.server = self._create_app()
+        self.routes = {}
         self.version = '1'
 
     # noinspection PyMethodMayBeStatic
@@ -45,7 +73,7 @@ class Tranquil:
             else:
                 server.config[k] = v
         if 'title' not in server.config:
-            server.config['title'] = g.config['DEFAULT'].get('title', 'Tranquil')
+            server.config['title'] = TITLE
         return server
 
     def app_context(self):
@@ -59,29 +87,12 @@ class Tranquil:
         def decorator(func):
             def decorated_func(*args, **kwargs):
                 children = func(*args, **kwargs)
-                methods = []
-                mounted = ''
+                if isinstance(children, dict) and 'template' in children:
+                    children = children['template']
                 if isinstance(children, Template):
                     children = [children]
-                elif isinstance(children, dict):
-                    if 'mounted' in children:
-                        mounted = children['mounted']
-                    if 'methods' in children:
-                        methods += children['methods']
-                    if 'template' in children:
-                        children = children['template']
-                for c in self.methods:
-                    method = f'{c.__name__}(data){{store.__update__("{url_for(c.__name__)}", data)}}'
-                    methods.append(method)
-                components = utils.find_components(children)
-                return render_template(
-                    'index.html',
-                    children=children,
-                    state=self.state,
-                    methods=methods,
-                    mounted=mounted,
-                    components=components,
-                )
+                return render_template('index.html', children=children, state=state, callbacks=callbacks,
+                                       components=find_components(children))
 
             decorated_func.__name__ = func.__name__
             self.server.route(rule, **options)(decorated_func)
@@ -97,7 +108,6 @@ class Tranquil:
                 result = func(*args, **kwargs)
                 return flask.jsonify(result)
 
-            self.methods.append(func)
             decorated_func.__name__ = func.__name__
             self.server.route(rule, **options)(decorated_func)
             return func

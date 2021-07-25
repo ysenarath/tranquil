@@ -1,87 +1,74 @@
-import random
+from flask import request
 
-from flask import request, url_for
-
-from tranquil import Tranquil
+from tranquil import Tranquil, callback, ref, state
+from tranquil.components import plotly
 from tranquil.html import html
-from tranquil.components import plotly as tcp
-from tranquil.components import bootstrap as tcb
 
 app = Tranquil()
 
 
-@app.api.route('/scatter_data', methods=['POST'])
-def scatter_data():
-    data = request.get_json().get('data', {'value': 1})
-    try:
-        value = int(data['value'])
-    except (TypeError, ValueError):
-        value = 1
-    return {
-        'data': [
-            {
-                'x': [i for i in range(value)],
-                'y': [random.random() for _ in range(value)],
-                'type': 'scatter',
-            }
-        ],
-    }
-
-
-@app.api.route('/treemap_data', methods=['POST'])
-def treemap_data():
+@app.api.route('/data', methods=["POST"])
+def data_provider():
+    data = request.get_json()
     return {
         'data': [{
             'type': "treemap",
             'labels': ["Eve", "Cain", "Seth", "Enos", "Noam", "Abel", "Awan", "Enoch", "Azura"],
             'parents': ["", "Eve", "Eve", "Seth", "Seth", "Eve", "Eve", "Awan", "Eve"]
         }],
+        'layout': {
+            'height': 'auto',
+        },
+        'config': {'responsive': True},
     }
 
 
-def heading():
-    return tcb.Navbar('3Minimal', [
-        dict(label='Home', url=url_for('home')),
-        dict(label='Page 2', url=url_for('home')),
-    ], id='heading-navbar')
-
-
 @app.route('/')
-def home():
-    app.state.inDarkMode = True
-    app.state.input_1.value = 100
-    scatter_plot = tcp.ScatterPlot(
-        id='scatter-plot-1',
-        data_url=url_for('scatter_data'),
-        ref='scatter-plot-1',
-    )
-    treemap = tcp.Treemap(
-        id='treemap-1',
-        data_url=url_for('treemap_data'),
-        ref='treemap-1',
-    )
-    return dict(
-        template=[
-            heading(),
-            html.DIV(
-                html.P('# of Values'),
-                html.INPUT(
-                    html.V_MODEL(f'input_1.value', modifier='number'),
-                    html.V_ON('keyup.enter', script=f'{scatter_plot}.update(input_1)'),
-                    _class='form-control',
-                ),
-                _class='m-3',
-            ),
+def index():
+    state.set_state({
+        'inDarkMode': True,
+        'button_1': {
+            'n_count': 0
+        },
+        'input_1': {
+            'value': 0,
+            'options': [1, 2, 3],
+        },
+    })
+    callback(data_provider, state.button_1.n_count, state.input_1.options)
+    callback(data_provider, state.input_1.value, state.input_1.options)
+    return [
+        html.INPUT(html.V_MODEL(state.input_1.value)),
+        html.BUTTON('Click Me!', html.V_ON('click', state.button_1.n_count)),
+        html.P(f'Hello World! {ref(state.input_1)}'),
+        html.P(f'Number of Clicks: {ref(state.button_1.n_count)}'),
+    ]
 
-            html.DIV(
-                html.DIV(scatter_plot, _class='col'),
-                html.DIV(treemap, _class='col'),
-                _class='row w-100'
-            ),
-        ],
-        mounted=f'{scatter_plot}.update(store.state.input_1);'
-                f'{treemap}.update();',
-    )
+
+@app.route('/page_2')
+def page_2():
+    state.set_state({
+        'inDarkMode': True,
+        'chart_1': {},
+        'button_1': {
+            'n_count': 0
+        },
+        'input_1': {
+            'value': 1,
+            'options': [
+                {'text': 'Value 1', 'key': 'K1', 'value': 0},
+                {'text': 'Value 2', 'key': 'K1', 'value': 1},
+            ],
+        },
+    })
+    chart_1 = plotly.Chart('chart-1', state.chart_1)
+    callback(data_provider, [state.button_1.n_count, state.input_1.value], state.chart_1)
+    return [
+        html.BUTTON('Click Me!', html.V_ON('click', state.button_1.n_count)),
+        html.DIV(chart_1),
+        html.SELECT(html.V_MODEL(state.input_1.value), html.V_OPTIONS(state.input_1.options)),
+        html.P(f'{ref(state.chart_1)}'),
+    ]
 
 
 def create_app():

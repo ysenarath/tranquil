@@ -4,3 +4,4 @@ setuptools~=57.1.0
 beautifulsoup4~=4.9.3
 lxml~=4.6.3
 six~=1.16.0
+Werkzeug~=2.0.1
