@@ -1,5 +1,6 @@
 from abc import ABC
 
+from jinja2 import Environment, BaseLoader
 from lxml import etree
 from lxml.html.builder import E
 
@@ -35,6 +36,9 @@ class Element(ElementBase):
                 children.append(child.etree)
             else:
                 children.append(str(child))
+        if 'PARSE' == self.tag.upper():
+            template = Environment(loader=BaseLoader).from_string(self.children[0])
+            return etree.fromstring(template.render(**self.kwargs))
         if 'CLASS' == self.tag.upper():
             return {'class': self.children[0]}
         if 'FOR' == self.tag.upper():
@@ -42,8 +46,8 @@ class Element(ElementBase):
         if 'V_ON' == self.tag.upper():
             action, value = self.children[0], self.children[1]
             if state.is_var(value):
-                value = value._ref
-            return {'v-on:{}'.format(action): f'{value}++'}
+                value = '{}++'.format(value._ref)
+            return {'v-on:{}'.format(action): value}
         if 'V_BIND' == self.tag.upper():
             attr, val = self.children[0], self.children[1]
             return {'v-bind:{}'.format(attr): val}
@@ -72,7 +76,7 @@ class Element(ElementBase):
                 value = value._ref
             option = getattr(E, 'OPTION')
             children.append(option('{{ option.text }}', {
-                'v-for': f'option in {value}',
+                'v-for': 'option in {}'.format(value),
                 ':key': 'option.key',
                 ':value': 'option.value'
             }))

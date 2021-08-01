@@ -38,6 +38,7 @@ class _object(object):
 
     def _set_value(self, value):
         super(_object, self).__setattr__('_data', self._to_object(value))
+        return self
 
     @property
     def _ref(self):
@@ -55,9 +56,6 @@ class State(_object):
 
     def to_dict(self):
         return super(State, self)._val
-
-    def set_state(self, state):
-        super(State, self)._set_value(state)
 
 
 def ref(o):

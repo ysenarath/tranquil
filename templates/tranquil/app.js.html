@@ -6,7 +6,12 @@
         store,
         methods: {},
         mounted() {
-            darkmode.inDarkMode = !!store.state.inDarkMode;
+            if (typeof store.state.inDarkMode !== 'undefined') {
+                darkmode.inDarkMode = !!store.state.inDarkMode;
+            } else {
+                darkmode.inDarkMode = true;
+            }
+
             {% for c in components %}
                 ((state) => { {{ c.refresh | safe }}
                 })(store.state.{{ c.state._ref }});

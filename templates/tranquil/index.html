@@ -1,13 +1,12 @@
-{% set title = config['title'] %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
     <title>{{ title }}</title>
-    <link href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='bootstrap/bootstrap-nightshade.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('tq.static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('tq.static', filename='bootstrap/bootstrap-nightshade.min.css') }}" rel="stylesheet">
     <style v-if="inDarkMode">
         svg.main-svg {
             background-color: transparent !important;
@@ -27,15 +26,15 @@
 {% if config['DEBUG'] %}
     <script>console.warn('Your application is running on debug mode.')</script>
 {% endif %}
-<script src="{{ url_for('static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
-<script src="{{ url_for('static', filename='bootstrap/darkmode.min.js') }}"></script>
-<script src="{{ url_for('static', filename='axios/axios.min.js') }}"></script>
+<script src="{{ url_for('tq.static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('tq.static', filename='bootstrap/darkmode.min.js') }}"></script>
+<script src="{{ url_for('tq.static', filename='axios/axios.min.js') }}"></script>
 {% if config['DEBUG'] %}
-    <script src="{{ url_for('static', filename='vuejs/vue.global.js') }}"></script>
-    <script src="{{ url_for('static', filename='plotly/plotly-2.2.0.js') }}"></script>
+    <script src="{{ url_for('tq.static', filename='vuejs/vue.global.js') }}"></script>
+    <script src="{{ url_for('tq.static', filename='plotly/plotly-2.2.0.js') }}"></script>
 {% else %}
-    <script src="{{ url_for('static', filename='vuejs/vue.global.prod.js') }}"></script>
-    <script src="{{ url_for('static', filename='plotly/plotly-2.2.0.min.js') }}"></script>
+    <script src="{{ url_for('tq.static', filename='vuejs/vue.global.prod.js') }}"></script>
+    <script src="{{ url_for('tq.static', filename='plotly/plotly-2.2.0.min.js') }}"></script>
 {% endif %}
 <script>
     const store = {
@@ -68,9 +67,10 @@
         )
     {% endfor %}
     {% for c in components %}
-        Vue.watch(() => store.state.{{ c.state._ref }}, (state, prevState) => { {{ c.refresh | safe }} })
+        Vue.watch(() => store.state.{{ c.state._ref }}, (state, prevState) => { {{ c.refresh | safe }}
+        })
     {% endfor %}
 </script>
-{% include 'app.js.html' %}
+{% include 'tranquil/app.js.html' %}
 </body>
 </html>
